@@ -1,0 +1,62 @@
+{% extends 'superadmin/base.html' %}
+{% block title %}Doctors{% endblock %}
+{% block page_title %}Doctors{% endblock %}
+{% block page_subtitle %}Manage doctor accounts and availability{% endblock %}
+{% block topbar_actions %}
+  <a href="{% url 'superadmin:doctor_create' %}" class="btn btn-primary">+ Add Doctor</a>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+  {% if doctors %}
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Doctor</th>
+          <th>Specialization</th>
+          <th>Experience</th>
+          <th>Fee</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for doctor in doctors %}
+      <tr>
+        <td>
+          <div style="font-weight:600">Dr. {{ doctor.user.get_full_name }}</div>
+          <div style="font-size:11px;color:var(--text-muted)">{{ doctor.user.email }}</div>
+        </td>
+        <td>{{ doctor.specialization }}</td>
+        <td>{{ doctor.experience_years }} yrs</td>
+        <td style="font-family:'JetBrains Mono',monospace">₹{{ doctor.consultation_fee }}</td>
+        <td>
+          <span class="badge {% if doctor.is_active %}badge-active{% else %}badge-cancelled{% endif %}">
+            {% if doctor.is_active %}Active{% else %}Inactive{% endif %}
+          </span>
+        </td>
+        <td>
+          <div style="display:flex;gap:6px">
+            <a href="{% url 'superadmin:doctor_slots' doctor.pk %}" class="btn btn-secondary btn-sm">Slots</a>
+            <a href="{% url 'superadmin:doctor_update' doctor.pk %}" class="btn btn-secondary btn-sm">Edit</a>
+            <form method="post" action="{% url 'superadmin:doctor_delete' doctor.pk %}"
+                  onsubmit="return confirm('Delete Dr. {{ doctor.user.get_full_name }}? This cannot be undone.')">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+            </form>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="icon">👨‍⚕️</div>
+    <p>No doctors yet. <a href="{% url 'superadmin:doctor_create' %}" style="color:var(--accent)">Add the first doctor →</a></p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

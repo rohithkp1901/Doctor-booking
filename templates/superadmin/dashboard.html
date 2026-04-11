@@ -1,0 +1,94 @@
+{% extends 'superadmin/base.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block page_subtitle %}Welcome back, {{ superadmin.first_name }}{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+  <div class="stat-card blue">
+    <div class="stat-label">Total Doctors</div>
+    <div class="stat-value blue">{{ total_doctors }}</div>
+    <div class="stat-icon">👨‍⚕️</div>
+  </div>
+  <div class="stat-card purple">
+    <div class="stat-label">Customers</div>
+    <div class="stat-value purple">{{ total_customers }}</div>
+    <div class="stat-icon">👥</div>
+  </div>
+  <div class="stat-card green">
+    <div class="stat-label">Appointments</div>
+    <div class="stat-value green">{{ total_appointments }}</div>
+    <div class="stat-icon">📅</div>
+  </div>
+  <div class="stat-card amber">
+    <div class="stat-label">Pending Leaves</div>
+    <div class="stat-value amber">{{ pending_leaves }}</div>
+    <div class="stat-icon">📋</div>
+  </div>
+</div>
+
+<div class="grid-2">
+  <!-- Recent Appointments -->
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">Recent Appointments</div>
+        <div class="card-subtitle">Latest bookings across all doctors</div>
+      </div>
+    </div>
+    {% if recent_appointments %}
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Patient</th><th>Doctor</th><th>Date</th><th>Status</th></tr></thead>
+        <tbody>
+        {% for appt in recent_appointments %}
+        <tr>
+          <td>{{ appt.customer.get_full_name }}</td>
+          <td>Dr. {{ appt.doctor.user.get_full_name }}</td>
+          <td style="font-family:'JetBrains Mono',monospace;font-size:12px">{{ appt.appointment_date }}</td>
+          <td><span class="badge badge-{{ appt.status }}">{{ appt.get_status_display }}</span></td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state"><div class="icon">📅</div><p>No appointments yet.</p></div>
+    {% endif %}
+  </div>
+
+  <!-- Pending Leave Requests -->
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">Pending Leave Requests</div>
+        <div class="card-subtitle">Awaiting your action</div>
+      </div>
+      {% if pending_leave_requests %}
+      <a href="{% url 'superadmin:leave_list' %}" class="btn btn-secondary btn-sm">View All</a>
+      {% endif %}
+    </div>
+    {% if pending_leave_requests %}
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Doctor</th><th>From</th><th>To</th><th>Action</th></tr></thead>
+        <tbody>
+        {% for leave in pending_leave_requests %}
+        <tr>
+          <td>Dr. {{ leave.doctor.user.get_full_name }}</td>
+          <td style="font-family:'JetBrains Mono',monospace;font-size:12px">{{ leave.start_date }}</td>
+          <td style="font-family:'JetBrains Mono',monospace;font-size:12px">{{ leave.end_date }}</td>
+          <td>
+            <a href="{% url 'superadmin:leave_list' %}" class="btn btn-secondary btn-sm">Review</a>
+          </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state"><div class="icon">✅</div><p>No pending leave requests.</p></div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

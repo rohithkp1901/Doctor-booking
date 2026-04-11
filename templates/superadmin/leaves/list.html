@@ -1,0 +1,156 @@
+{% extends 'superadmin/base.html' %}
+{% block title %}Leave Requests{% endblock %}
+{% block page_title %}Leave Requests{% endblock %}
+{% block page_subtitle %}Approve or reject doctor leave applications{% endblock %}
+
+{% block extra_head %}
+<style>
+  .modal-overlay {
+    display:none; position:fixed; inset:0;
+    background:rgba(0,0,0,.7); z-index:200;
+    align-items:center; justify-content:center;
+  }
+  .modal-overlay.open { display:flex; }
+  .modal {
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:14px; padding:28px; width:100%; max-width:420px;
+  }
+  .modal h3 { font-size:16px; font-weight:700; margin-bottom:16px; }
+  .modal-actions { display:flex; gap:10px; margin-top:20px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Filter tabs -->
+<div style="display:flex;gap:8px;margin-bottom:20px">
+  {% for val, label in "all:All,pending:Pending,approved:Approved,rejected:Rejected"|split:"," %}
+  {% with parts=val|cut:" " %}
+  {% endwith %}
+  {% endfor %}
+  <a href="?status=all" class="btn {% if status_filter == 'all' %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">All</a>
+  <a href="?status=pending" class="btn {% if status_filter == 'pending' %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">Pending</a>
+  <a href="?status=approved" class="btn {% if status_filter == 'approved' %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">Approved</a>
+  <a href="?status=rejected" class="btn {% if status_filter == 'rejected' %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">Rejected</a>
+</div>
+
+<div class="card">
+  {% if leave_requests %}
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Doctor</th>
+          <th>Specialization</th>
+          <th>Leave Period</th>
+          <th>Reason</th>
+          <th>Status</th>
+          <th>Admin Note</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for leave in leave_requests %}
+      <tr>
+        <td>
+          <div style="font-weight:600">Dr. {{ leave.doctor.user.get_full_name }}</div>
+          <div style="font-size:11px;color:var(--text-muted)">{{ leave.doctor.user.email }}</div>
+        </td>
+        <td style="color:var(--text-muted);font-size:13px">{{ leave.doctor.specialization }}</td>
+        <td>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:12px">{{ leave.start_date }}</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-muted)">→ {{ leave.end_date }}</div>
+        </td>
+        <td style="max-width:200px;font-size:13px;color:var(--text-dim)">
+          {{ leave.reason|truncatewords:12 }}
+        </td>
+        <td><span class="badge badge-{{ leave.status }}">{{ leave.get_status_display }}</span></td>
+        <td style="font-size:12px;color:var(--text-muted)">
+          {{ leave.admin_reason|default:"—" }}
+        </td>
+        <td>
+          {% if leave.status == 'pending' %}
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-success btn-sm"
+              onclick="openModal('approve', {{ leave.pk }}, 'Dr. {{ leave.doctor.user.get_full_name }}')">
+              Approve
+            </button>
+            <button class="btn btn-danger btn-sm"
+              onclick="openModal('reject', {{ leave.pk }}, 'Dr. {{ leave.doctor.user.get_full_name }}')">
+              Reject
+            </button>
+          </div>
+          {% else %}
+          <span style="font-size:12px;color:var(--text-muted)">—</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="icon">📋</div>
+    <p>No leave requests found{% if status_filter != 'all' %} with status "{{ status_filter }}"{% endif %}.</p>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Action Modal -->
+<div class="modal-overlay" id="actionModal">
+  <div class="modal">
+    <h3 id="modalTitle">Confirm Action</h3>
+    <p id="modalDesc" style="font-size:13px;color:var(--text-muted);margin-bottom:16px"></p>
+    <form method="post" id="actionForm">
+      {% csrf_token %}
+      <input type="hidden" name="action" id="actionInput">
+      <div class="form-group">
+        <label style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);display:block;margin-bottom:6px">
+          Reason / Note (optional)
+        </label>
+        <textarea name="reason" class="form-control" rows="3" placeholder="Add a note for the doctor..."></textarea>
+      </div>
+      <div class="modal-actions">
+        <button type="submit" class="btn btn-primary" id="modalSubmitBtn">Confirm</button>
+        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function openModal(action, leaveId, doctorName) {
+  const modal = document.getElementById('actionModal');
+  const form = document.getElementById('actionForm');
+  const title = document.getElementById('modalTitle');
+  const desc = document.getElementById('modalDesc');
+  const input = document.getElementById('actionInput');
+  const btn = document.getElementById('modalSubmitBtn');
+
+  form.action = `/superadmin/leaves/${leaveId}/action/`;
+  input.value = action;
+
+  if (action === 'approve') {
+    title.textContent = 'Approve Leave';
+    desc.textContent = `You are about to approve the leave request from ${doctorName}.`;
+    btn.textContent = 'Approve';
+    btn.className = 'btn btn-success';
+  } else {
+    title.textContent = 'Reject Leave';
+    desc.textContent = `You are about to reject the leave request from ${doctorName}.`;
+    btn.textContent = 'Reject';
+    btn.className = 'btn btn-danger';
+  }
+
+  modal.classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('actionModal').classList.remove('open');
+}
+
+document.getElementById('actionModal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+</script>
+{% endblock %}

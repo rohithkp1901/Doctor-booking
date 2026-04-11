@@ -1,0 +1,63 @@
+{% extends 'superadmin/base.html' %}
+{% block title %}Slots — Dr. {{ doctor.user.get_full_name }}{% endblock %}
+{% block page_title %}Doctor Slots{% endblock %}
+{% block page_subtitle %}Dr. {{ doctor.user.get_full_name }} — {{ doctor.specialization }}{% endblock %}
+{% block topbar_actions %}
+  <a href="{% url 'superadmin:doctor_list' %}" class="btn btn-secondary">← Back to Doctors</a>
+{% endblock %}
+
+{% block content %}
+<div class="card" style="margin-bottom:20px">
+  <form method="get" style="display:flex;align-items:flex-end;gap:12px">
+    <div class="form-group" style="flex:1;max-width:220px;margin:0">
+      <label style="font-size:11px;font-weight:600;text-transform:uppercase;color:var(--text-muted);letter-spacing:.06em;display:block;margin-bottom:6px">Select Date</label>
+      <input type="date" name="date" class="form-control" value="{{ selected_date|date:'Y-m-d' }}">
+    </div>
+    <button type="submit" class="btn btn-primary">View Slots</button>
+  </form>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <div>
+      <div class="card-title">Slots for {{ selected_date|date:"l, d F Y" }}</div>
+      <div class="card-subtitle">
+        Read-only view &mdash;
+        {% with available=slots|length %}
+          {{ slots|length }} total slots
+        {% endwith %}
+      </div>
+    </div>
+  </div>
+
+  {% if slots %}
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px">
+    {% for slot in slots %}
+    <div style="
+      padding:14px;
+      border-radius:10px;
+      border:1px solid {% if slot.is_booked %}rgba(239,68,68,.3){% elif slot.is_past %}rgba(100,116,139,.2){% else %}rgba(16,185,129,.3){% endif %};
+      background:{% if slot.is_booked %}rgba(239,68,68,.07){% elif slot.is_past %}rgba(100,116,139,.06){% else %}rgba(16,185,129,.07){% endif %};
+      text-align:center;
+    ">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600;
+        color:{% if slot.is_booked %}var(--danger){% elif slot.is_past %}var(--text-muted){% else %}var(--success){% endif %}">
+        {{ slot.start_time }}
+      </div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:3px">→ {{ slot.end_time }}</div>
+      <div style="margin-top:8px">
+        <span class="badge {% if slot.is_booked %}badge-cancelled{% elif slot.is_past %}badge-pending{% else %}badge-approved{% endif %}" style="font-size:10px">
+          {% if slot.is_booked %}Booked{% elif slot.is_past %}Past{% else %}Available{% endif %}
+        </span>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="icon">📅</div>
+    <p>No slots available on this date. The doctor may be off or on leave.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
