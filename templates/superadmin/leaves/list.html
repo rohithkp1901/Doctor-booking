@@ -21,15 +21,15 @@
 {% endblock %}
 
 {% block content %}
-<!-- Filter tabs -->
+
+<!-- ✅ FIXED FILTER BUTTONS (no split error) -->
 <div style="display:flex;gap:8px;margin-bottom:20px">
-  {% for val, label in "all:All,pending:Pending,approved:Approved,rejected:Rejected"|split:"," %}
-  {% with parts=val|cut:" " %}
-  {% endwith %}
-  {% endfor %}
   <a href="?status=all" class="btn {% if status_filter == 'all' %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">All</a>
+
   <a href="?status=pending" class="btn {% if status_filter == 'pending' %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">Pending</a>
+
   <a href="?status=approved" class="btn {% if status_filter == 'approved' %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">Approved</a>
+
   <a href="?status=rejected" class="btn {% if status_filter == 'rejected' %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">Rejected</a>
 </div>
 
@@ -55,18 +55,34 @@
           <div style="font-weight:600">Dr. {{ leave.doctor.user.get_full_name }}</div>
           <div style="font-size:11px;color:var(--text-muted)">{{ leave.doctor.user.email }}</div>
         </td>
-        <td style="color:var(--text-muted);font-size:13px">{{ leave.doctor.specialization }}</td>
-        <td>
-          <div style="font-family:'JetBrains Mono',monospace;font-size:12px">{{ leave.start_date }}</div>
-          <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-muted)">→ {{ leave.end_date }}</div>
+
+        <td style="color:var(--text-muted);font-size:13px">
+          {{ leave.doctor.specialization }}
         </td>
+
+        <td>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:12px">
+            {{ leave.start_date }}
+          </div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-muted)">
+            → {{ leave.end_date }}
+          </div>
+        </td>
+
         <td style="max-width:200px;font-size:13px;color:var(--text-dim)">
           {{ leave.reason|truncatewords:12 }}
         </td>
-        <td><span class="badge badge-{{ leave.status }}">{{ leave.get_status_display }}</span></td>
+
+        <td>
+          <span class="badge badge-{{ leave.status }}">
+            {{ leave.get_status_display }}
+          </span>
+        </td>
+
         <td style="font-size:12px;color:var(--text-muted)">
           {{ leave.admin_reason|default:"—" }}
         </td>
+
         <td>
           {% if leave.status == 'pending' %}
           <div style="display:flex;gap:6px">
@@ -74,6 +90,7 @@
               onclick="openModal('approve', {{ leave.pk }}, 'Dr. {{ leave.doctor.user.get_full_name }}')">
               Approve
             </button>
+
             <button class="btn btn-danger btn-sm"
               onclick="openModal('reject', {{ leave.pk }}, 'Dr. {{ leave.doctor.user.get_full_name }}')">
               Reject
@@ -91,25 +108,32 @@
   {% else %}
   <div class="empty-state">
     <div class="icon">📋</div>
-    <p>No leave requests found{% if status_filter != 'all' %} with status "{{ status_filter }}"{% endif %}.</p>
+    <p>
+      No leave requests found
+      {% if status_filter != 'all' %}
+        with status "{{ status_filter }}"
+      {% endif %}.
+    </p>
   </div>
   {% endif %}
 </div>
 
-<!-- Action Modal -->
+<!-- Modal -->
 <div class="modal-overlay" id="actionModal">
   <div class="modal">
     <h3 id="modalTitle">Confirm Action</h3>
     <p id="modalDesc" style="font-size:13px;color:var(--text-muted);margin-bottom:16px"></p>
+
     <form method="post" id="actionForm">
       {% csrf_token %}
       <input type="hidden" name="action" id="actionInput">
+
       <div class="form-group">
-        <label style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);display:block;margin-bottom:6px">
-          Reason / Note (optional)
-        </label>
-        <textarea name="reason" class="form-control" rows="3" placeholder="Add a note for the doctor..."></textarea>
+        <label style="font-size:12px;font-weight:600;">Reason / Note (optional)</label>
+        <textarea name="reason" class="form-control" rows="3"
+          placeholder="Add a note for the doctor..."></textarea>
       </div>
+
       <div class="modal-actions">
         <button type="submit" class="btn btn-primary" id="modalSubmitBtn">Confirm</button>
         <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
@@ -153,4 +177,5 @@ document.getElementById('actionModal').addEventListener('click', function(e) {
   if (e.target === this) closeModal();
 });
 </script>
+
 {% endblock %}
