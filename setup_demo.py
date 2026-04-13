@@ -42,7 +42,7 @@ doctors_data = [
         'start_time': time(9, 0), 'end_time': time(17, 0), 'slot_duration': 30,
     },
     {
-        'email': 'dr.Dhoni@yopmail.com',
+        'email': 'dr.dhoni@yopmail.com',
         'first_name': 'Mahendra Singh', 'last_name': 'Dhoni',
         'specialization': 'Orthopedic Surgeon',
         'qualification': 'MBBS, MS (Ortho)',
@@ -118,6 +118,6 @@ print("  Superadmin Dashboard:              http://127.0.0.1:8000/superadmin/")
 print("\nTest Credentials:")
 print("  Superadmin : admin@yopmail.com     / admin123")
 print("  Doctor 1   : dr.sharma@yopmail.com / doctor123")
-print("  Doctor 2   : dr.mehta@yopmail.com  / doctor123")
+print("  Doctor 2   : dr.dhoni@yopmail.com  / doctor123")
 print("  Doctor 3   : dr.patel@yopmail.com  / doctor123")
 print("  Customer   : patient@yopmail.com   / patient123")
